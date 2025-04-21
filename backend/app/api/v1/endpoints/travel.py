@@ -1,5 +1,4 @@
 import re
-from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
@@ -116,8 +115,7 @@ async def get_query_history(
                 response["embassyInformation"] = (
                     f"Contact the {query.destination} embassy for more information"
                 )
-            if "timestamp" not in response:
-                response["timestamp"] = datetime.utcnow().isoformat()
+            response["timestamp"] = query.created_at.isoformat()
 
             required_fields = [
                 "destination",

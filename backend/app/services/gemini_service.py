@@ -1,4 +1,5 @@
 import json
+from datetime import UTC
 from typing import Any
 
 import google.generativeai as genai
@@ -223,18 +224,18 @@ class GeminiService:
             from datetime import datetime
 
             if "timestamp" not in response_data:
-                response_data["timestamp"] = datetime.utcnow().isoformat()
+                response_data["timestamp"] = datetime.now(UTC).isoformat()
             else:
                 try:
                     parsed_time = datetime.fromisoformat(
                         response_data["timestamp"].replace("Z", "+00:00")
                     )
-                    response_data["timestamp"] = parsed_time.isoformat()
+                    response_data["timestamp"] = parsed_time.astimezone(UTC).isoformat()
                 except ValueError:
                     logger.warning(
                         "Invalid timestamp format in response, using current time"
                     )
-                    response_data["timestamp"] = datetime.utcnow().isoformat()
+                    response_data["timestamp"] = datetime.now(UTC).isoformat()
 
             logger.debug("Successfully validated and formatted response data")
             return response_data
