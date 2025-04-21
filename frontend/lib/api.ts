@@ -28,7 +28,7 @@ export interface ApiError {
 }
 
 export const getApiUrl = (endpoint: string) => {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  const baseUrl = 'https://travel-assistant-b08x.onrender.com';
   return `${baseUrl}/api/v1${endpoint}`;
 };
 

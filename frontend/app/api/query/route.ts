@@ -20,7 +20,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Query is required and must be a non-empty string" }, { status: 400 })
     }
 
-    // Extract origin and destination from query if possible
     const originDestinationRegex =
       /(?:from|travel(?:ing)? from)\s+([a-zA-Z\s]+)\s+(?:to|visit(?:ing)?)\s+([a-zA-Z\s]+)/i
     const destinationRegex = /(?:to|visit(?:ing)?)\s+([a-zA-Z\s]+)/i
@@ -44,8 +43,6 @@ export async function POST(request: Request) {
       destination = "Unknown destination"
     }
 
-    // For demo purposes, we'll create a mock response
-    // In a real application, this would call OpenAI or another LLM
     const mockResponse: TravelResponse = {
       destination,
       origin,
