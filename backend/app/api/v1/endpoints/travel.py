@@ -15,21 +15,24 @@ logger = setup_logging()
 
 router = APIRouter()
 gemini_service = GeminiService()
-history_service = HistoryService()
 
-# Initialize rate limiters
-query_rate_limiter = RateLimiter(
-    max_requests=5, time_window=60
-)  # 5 requests per minute
-history_rate_limiter = RateLimiter(
-    max_requests=10, time_window=60
-)  # 10 requests per minute
+
+query_rate_limiter = RateLimiter(max_requests=5, time_window=60)
+history_rate_limiter = RateLimiter(max_requests=10, time_window=60)
+
+
+def get_history_service(db: Session = Depends(get_db)) -> HistoryService:
+    """Get an instance of HistoryService with the current database session."""
+    return HistoryService(db)
 
 
 @router.post("/query", response_model=TravelQueryResponse)
 @query_rate_limiter
 async def create_travel_query(
-    request: Request, query: TravelQueryCreate, db: Session = Depends(get_db)
+    request: Request,
+    query: TravelQueryCreate,
+    db: Session = Depends(get_db),
+    history_service: HistoryService = Depends(get_history_service),
 ) -> TravelQueryResponse:
     """Create a new travel query and get AI-generated travel information.
 
@@ -37,6 +40,7 @@ async def create_travel_query(
         request (Request): FastAPI request object
         query (TravelQueryCreate): The travel query details including destination and origin
         db (Session): Database session dependency
+        history_service (HistoryService): History service dependency
 
     Returns:
         TravelQueryResponse: Complete response including AI-generated travel information
@@ -87,13 +91,16 @@ async def create_travel_query(
 @router.get("/history", response_model=list[TravelQueryResponse])
 @history_rate_limiter
 async def get_query_history(
-    request: Request, db: Session = Depends(get_db)
+    request: Request,
+    db: Session = Depends(get_db),
+    history_service: HistoryService = Depends(get_history_service),
 ) -> list[TravelQueryResponse]:
     """Retrieve the history of all travel queries.
 
     Args:
         request (Request): FastAPI request object
         db (Session): Database session dependency
+        history_service (HistoryService): History service dependency
 
     Returns:
         List[TravelQueryResponse]: List of all previous travel queries and their responses
