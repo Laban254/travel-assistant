@@ -1,11 +1,10 @@
 import google.generativeai as genai
-import logging
-import os
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from ..core.config import get_settings
+from app.core.logging_config import setup_logging
 import json
 
-logger = logging.getLogger(__name__)
+logger = setup_logging()
 settings = get_settings()
 
 class GeminiService:
@@ -29,18 +28,13 @@ class GeminiService:
         Raises:
             ValueError: If the Gemini API key is not configured in environment variables
         """
-        self.api_key = settings.GEMINI_API_KEY
-        
-        if not self.api_key or self.api_key == "your_gemini_api_key_here":
-            logger.error("Gemini API key is missing or not configured")
-            raise ValueError("Gemini API key is not configured")
-        
-        genai.configure(api_key=self.api_key)
         try:
-            self.model = genai.GenerativeModel('gemini-1.5-flash')
-            logger.info("Using model: gemini-1.5-flash")
+            logger.info("Initializing Gemini service")
+            genai.configure(api_key=settings.GEMINI_API_KEY)
+            self.model = genai.GenerativeModel('gemini-pro')
+            logger.info("Gemini service initialized successfully")
         except Exception as e:
-            logger.error(f"Failed to initialize Gemini model: {str(e)}")
+            logger.error(f"Failed to initialize Gemini service: {str(e)}", exc_info=True)
             raise
 
     async def get_travel_info(self, query: str, destination: str, origin: str = None) -> Dict[str, Any]:
@@ -70,11 +64,19 @@ class GeminiService:
             Exception: If there's an error communicating with the AI model
         """
         try:
+            logger.info(f"Generating travel info for destination: {destination}, origin: {origin}")
             prompt = self._format_prompt(query, destination, origin)
+            logger.debug("Generated prompt for Gemini model")
+            
             response = await self._make_api_request(prompt)
-            return self._parse_response(response)
+            logger.info(f"Successfully generated response for {destination}")
+            
+            parsed_response = self._parse_response(response)
+            logger.debug("Successfully parsed Gemini response")
+            
+            return parsed_response
         except Exception as e:
-            logger.error(f"Error in Gemini service: {str(e)}")
+            logger.error(f"Error in Gemini service: {str(e)}", exc_info=True)
             raise
 
     def _format_prompt(self, query: str, destination: str, origin: str = None) -> str:
@@ -92,6 +94,7 @@ class GeminiService:
             str: Formatted prompt for the AI model with clear instructions
                  for generating structured travel information
         """
+        logger.debug(f"Formatting prompt for query: {query}")
         base_prompt = f"""You are a travel advisor specializing in international travel requirements.
         Please provide detailed information about travel requirements from {origin or 'any country'} to {destination}.
 
@@ -134,6 +137,7 @@ class GeminiService:
             Exception: If there's an error communicating with the API
         """
         try:
+            logger.debug("Making API request to Gemini")
             response = self.model.generate_content(
                 prompt,
                 generation_config={
@@ -145,11 +149,13 @@ class GeminiService:
             )
             
             if not response.text:
+                logger.error("Empty response received from Gemini API")
                 raise Exception("Empty response from Gemini API")
             
+            logger.debug("Successfully received response from Gemini API")
             return response.text
         except Exception as e:
-            logger.error(f"API request failed: {str(e)}")
+            logger.error(f"API request failed: {str(e)}", exc_info=True)
             raise
 
     def _parse_response(self, response_text: str) -> Dict[str, Any]:
@@ -178,6 +184,7 @@ class GeminiService:
             Exception: If there's an error parsing the response
         """
         try:
+            logger.debug("Starting to parse Gemini response")
             cleaned_text = response_text.strip()
             if cleaned_text.startswith('```json'):
                 cleaned_text = cleaned_text[7:]
@@ -186,6 +193,7 @@ class GeminiService:
             cleaned_text = cleaned_text.strip()
             
             response_data = json.loads(cleaned_text)
+            logger.debug("Successfully parsed JSON response")
             
             required_fields = [
                 "destination", "origin", "visaRequirements",
@@ -195,6 +203,7 @@ class GeminiService:
             
             for field in required_fields:
                 if field not in response_data:
+                    logger.error(f"Missing required field in response: {field}")
                     raise ValueError(f"Missing required field: {field}")
             
             from datetime import datetime
@@ -205,13 +214,15 @@ class GeminiService:
                     parsed_time = datetime.fromisoformat(response_data["timestamp"].replace("Z", "+00:00"))
                     response_data["timestamp"] = parsed_time.isoformat()
                 except ValueError:
+                    logger.warning("Invalid timestamp format in response, using current time")
                     response_data["timestamp"] = datetime.utcnow().isoformat()
             
+            logger.debug("Successfully validated and formatted response data")
             return response_data
             
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse response as JSON: {response_text}")
             raise ValueError("Invalid JSON response from AI model")
         except Exception as e:
-            logger.error(f"Error parsing response: {str(e)}")
+            logger.error(f"Error parsing response: {str(e)}", exc_info=True)
             raise 

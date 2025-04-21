@@ -1,6 +1,5 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Request, HTTPException, Depends
 from typing import Optional, List
-import logging
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -8,18 +7,27 @@ from app.models.travel_query import TravelQuery
 from app.schemas.travel_query import TravelQueryCreate, TravelQueryResponse
 from app.services.gemini_service import GeminiService
 from app.services.history_service import HistoryService
+from app.core.rate_limiter import RateLimiter
+from app.core.logging_config import setup_logging
+
+logger = setup_logging()
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
+
+query_rate_limiter = RateLimiter(max_requests=10, time_window=60)  # 10 requests per minute
+history_rate_limiter = RateLimiter(max_requests=5, time_window=60)  # 5 requests per minute
 
 @router.post("/query", response_model=TravelQueryResponse)
+@query_rate_limiter
 async def create_travel_query(
+    request: Request,
     query: TravelQueryCreate,
     db: Session = Depends(get_db)
 ) -> TravelQueryResponse:
     """Create a new travel query and get AI-generated travel information.
     
     Args:
+        request (Request): FastAPI request object
         query (TravelQueryCreate): The travel query details including destination and origin
         db (Session): Database session dependency
         
@@ -30,13 +38,17 @@ async def create_travel_query(
         HTTPException: If there's an error processing the query or generating the response
     """
     try:
+        logger.info(f"Received travel query: {query.destination} - {query.query}")
+        
         gemini_service = GeminiService()
+        logger.debug("Initialized Gemini service")
         
         travel_info = await gemini_service.get_travel_info(
             query=query.query,
             destination=query.destination,
             origin=query.origin
         )
+        logger.info(f"Successfully generated response for {query.destination}")
         
         db_query = TravelQuery(
             query=query.query,
@@ -47,6 +59,7 @@ async def create_travel_query(
         db.add(db_query)
         db.commit()
         db.refresh(db_query)
+        logger.debug(f"Saved query to database with ID: {db_query.id}")
         
         return TravelQueryResponse(
             id=db_query.id,
@@ -61,16 +74,19 @@ async def create_travel_query(
         logger.error(f"Error processing query: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"Unexpected error processing query: {str(e)}")
+        logger.error(f"Unexpected error processing query: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
 @router.get("/history", response_model=List[TravelQueryResponse])
+@history_rate_limiter
 async def get_query_history(
+    request: Request,
     db: Session = Depends(get_db)
 ) -> List[TravelQueryResponse]:
     """Retrieve the history of all travel queries.
     
     Args:
+        request (Request): FastAPI request object
         db (Session): Database session dependency
         
     Returns:
@@ -80,13 +96,14 @@ async def get_query_history(
         HTTPException: If there's an error retrieving the history
     """
     try:
+        logger.info("Fetching query history")
         queries = db.query(TravelQuery).order_by(TravelQuery.created_at.desc()).all()
+        logger.debug(f"Found {len(queries)} queries in history")
+        
         responses = []
         for query in queries:
-            # Ensure all required fields are present in the response
-            response = query.response.copy()  # Create a copy to avoid modifying the original
+            response = query.response.copy() 
             
-            # Add missing required fields with default values
             if "origin" not in response:
                 response["origin"] = query.origin or "Not specified"
             if "embassyInformation" not in response:
@@ -95,7 +112,6 @@ async def get_query_history(
                 from datetime import datetime
                 response["timestamp"] = datetime.utcnow().isoformat()
             
-            # Ensure other required fields are present
             required_fields = [
                 "destination", "visaRequirements", "documents",
                 "advisories", "estimatedProcessingTime"
@@ -115,10 +131,11 @@ async def get_query_history(
                     created_at=query.created_at
                 )
             )
+        logger.info("Successfully retrieved and formatted query history")
         return responses
     except Exception as e:
-        logger.error(f"Error fetching history: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error fetching history: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to fetch query history")
 
 @router.get("/history/{query_id}", response_model=TravelQueryResponse)
 async def get_query_by_id(
@@ -138,9 +155,12 @@ async def get_query_by_id(
         HTTPException: If the query is not found or there's an error retrieving it
     """
     try:
+        logger.info(f"Fetching query with ID: {query_id}")
         query = db.query(TravelQuery).filter(TravelQuery.id == query_id).first()
         if not query:
+            logger.warning(f"Query with ID {query_id} not found")
             raise HTTPException(status_code=404, detail="Query not found")
+        logger.debug(f"Successfully retrieved query with ID: {query_id}")
         return TravelQueryResponse(
             id=query.id,
             query=query.query,
@@ -150,7 +170,7 @@ async def get_query_by_id(
             created_at=query.created_at
         )
     except Exception as e:
-        logger.error(f"Error fetching query: {str(e)}")
+        logger.error(f"Error fetching query: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/history/{query_id}")
@@ -171,15 +191,18 @@ async def delete_query(
         HTTPException: If the query is not found or there's an error deleting it
     """
     try:
+        logger.info(f"Attempting to delete query with ID: {query_id}")
         query = db.query(TravelQuery).filter(TravelQuery.id == query_id).first()
         if not query:
+            logger.warning(f"Query with ID {query_id} not found for deletion")
             raise HTTPException(status_code=404, detail="Query not found")
         
         db.delete(query)
         db.commit()
+        logger.info(f"Successfully deleted query with ID: {query_id}")
         return {"message": "Query deleted successfully"}
     except Exception as e:
-        logger.error(f"Error deleting query: {str(e)}")
+        logger.error(f"Error deleting query: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 def extract_travel_info(query: str) -> tuple[Optional[str], str]:

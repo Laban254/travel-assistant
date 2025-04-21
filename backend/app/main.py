@@ -5,7 +5,6 @@ from app.core.config import get_settings
 from app.core.database import Base, engine
 from app.core.middleware import setup_cors, request_validation_middleware
 from app.core.logging_config import setup_logging
-from app.core.rate_limiting import setup_rate_limiter, get_rate_limit_config
 from app.api.v1.endpoints import travel
 
 # Configure logging
@@ -21,11 +20,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Get rate limit configuration
-rate_limit_config = get_rate_limit_config()
-
 # Setup middleware
-limiter = setup_rate_limiter(app)
 setup_cors(app, settings.allowed_origins_list)
 app.middleware("http")(request_validation_middleware)
 
@@ -33,7 +28,6 @@ app.middleware("http")(request_validation_middleware)
 app.include_router(travel.router, prefix="/api/v1", tags=["travel"])
 
 @app.get("/")
-@limiter.limit(rate_limit_config["default"])
 async def root(request: Request):
     """Root endpoint that returns API information."""
     logger.info("Root endpoint accessed")

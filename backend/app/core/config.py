@@ -4,6 +4,9 @@ import os
 from functools import lru_cache
 from enum import Enum
 from typing import List
+from .logging_config import setup_logging
+
+logger = setup_logging()
 
 class DatabaseType(str, Enum):
     SQLITE = "sqlite"
@@ -62,4 +65,6 @@ class Settings(BaseSettings):
 
 @lru_cache()
 def get_settings() -> Settings:
+    """Get cached settings instance."""
+    logger.info("Loading application settings")
     return Settings() 

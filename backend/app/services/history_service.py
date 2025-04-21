@@ -1,8 +1,11 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from app.core.logging_config import setup_logging
 
 from app.models import TravelResponse, TravelQuery
 from app.schemas.travel_query import TravelQueryCreate
+
+logger = setup_logging()
 
 class HistoryService:
     """Service for managing travel query history in the database.
@@ -12,7 +15,13 @@ class HistoryService:
     """
 
     def __init__(self, db: Session):
+        """Initialize the history service with a database session.
+        
+        Args:
+            db (Session): Database session
+        """
         self.db = db
+        logger.debug("HistoryService initialized with database session")
 
     def save_query(self, query: str, response: dict) -> TravelQuery:
         """Save a new travel query to the database.
@@ -24,14 +33,20 @@ class HistoryService:
         Returns:
             TravelQuery: The saved query record
         """
-        db_query = TravelQuery(
-            query=query,
-            response=response
-        )
-        self.db.add(db_query)
-        self.db.commit()
-        self.db.refresh(db_query)
-        return db_query
+        try:
+            logger.info(f"Saving new travel query: {query[:50]}...")
+            db_query = TravelQuery(
+                query=query,
+                response=response
+            )
+            self.db.add(db_query)
+            self.db.commit()
+            self.db.refresh(db_query)
+            logger.info(f"Successfully saved query with ID: {db_query.id}")
+            return db_query
+        except Exception as e:
+            logger.error(f"Error saving query: {str(e)}", exc_info=True)
+            raise
 
     def get_history(self, limit: Optional[int] = 10) -> List[TravelQuery]:
         """Retrieve travel query history.
@@ -42,10 +57,17 @@ class HistoryService:
         Returns:
             List[TravelQuery]: List of travel query records
         """
-        return self.db.query(TravelQuery)\
-            .order_by(TravelQuery.created_at.desc())\
-            .limit(limit)\
-            .all()
+        try:
+            logger.info(f"Retrieving query history with limit: {limit}")
+            queries = self.db.query(TravelQuery)\
+                .order_by(TravelQuery.created_at.desc())\
+                .limit(limit)\
+                .all()
+            logger.info(f"Successfully retrieved {len(queries)} queries")
+            return queries
+        except Exception as e:
+            logger.error(f"Error retrieving history: {str(e)}", exc_info=True)
+            raise
 
     def get_query_by_id(self, query_id: int) -> Optional[TravelQuery]:
         """Retrieve a specific travel query by its ID.
@@ -56,7 +78,17 @@ class HistoryService:
         Returns:
             Optional[TravelQuery]: The requested query record, or None if not found
         """
-        return self.db.query(TravelQuery).filter(TravelQuery.id == query_id).first()
+        try:
+            logger.info(f"Retrieving query with ID: {query_id}")
+            query = self.db.query(TravelQuery).filter(TravelQuery.id == query_id).first()
+            if query:
+                logger.debug(f"Found query with ID: {query_id}")
+            else:
+                logger.warning(f"Query with ID {query_id} not found")
+            return query
+        except Exception as e:
+            logger.error(f"Error retrieving query: {str(e)}", exc_info=True)
+            raise
 
     @staticmethod
     async def create_query(
@@ -77,16 +109,22 @@ class HistoryService:
         Raises:
             Exception: If there's an error creating the record
         """
-        db_query = TravelQuery(
-            query=query.query,
-            destination=query.destination,
-            origin=query.origin,
-            response=response.dict()
-        )
-        db.add(db_query)
-        db.commit()
-        db.refresh(db_query)
-        return db_query
+        try:
+            logger.info(f"Creating new query for destination: {query.destination}")
+            db_query = TravelQuery(
+                query=query.query,
+                destination=query.destination,
+                origin=query.origin,
+                response=response.dict()
+            )
+            db.add(db_query)
+            db.commit()
+            db.refresh(db_query)
+            logger.info(f"Successfully created query with ID: {db_query.id}")
+            return db_query
+        except Exception as e:
+            logger.error(f"Error creating query: {str(e)}", exc_info=True)
+            raise
 
     @staticmethod
     async def get_query_history(
@@ -102,10 +140,17 @@ class HistoryService:
         Returns:
             List[TravelQuery]: List of travel query records
         """
-        query = db.query(TravelQuery).order_by(TravelQuery.created_at.desc())
-        if limit:
-            query = query.limit(limit)
-        return query.all()
+        try:
+            logger.info(f"Retrieving query history with limit: {limit}")
+            queries = db.query(TravelQuery)\
+                .order_by(TravelQuery.created_at.desc())\
+                .limit(limit)\
+                .all()
+            logger.info(f"Successfully retrieved {len(queries)} queries")
+            return queries
+        except Exception as e:
+            logger.error(f"Error retrieving query history: {str(e)}", exc_info=True)
+            raise
 
     @staticmethod
     async def get_query_by_id(
@@ -121,7 +166,17 @@ class HistoryService:
         Returns:
             Optional[TravelQuery]: The requested query record, or None if not found
         """
-        return db.query(TravelQuery).filter(TravelQuery.id == query_id).first()
+        try:
+            logger.info(f"Retrieving query with ID: {query_id}")
+            query = db.query(TravelQuery).filter(TravelQuery.id == query_id).first()
+            if query:
+                logger.debug(f"Found query with ID: {query_id}")
+            else:
+                logger.warning(f"Query with ID {query_id} not found")
+            return query
+        except Exception as e:
+            logger.error(f"Error retrieving query: {str(e)}", exc_info=True)
+            raise
 
     @staticmethod
     async def delete_query(
@@ -135,11 +190,19 @@ class HistoryService:
             query_id (int): ID of the query to delete
             
         Returns:
-            bool: True if query was deleted, False if not found
+            bool: True if the query was deleted, False if not found
         """
-        query = await HistoryService.get_query_by_id(db, query_id)
-        if query:
+        try:
+            logger.info(f"Attempting to delete query with ID: {query_id}")
+            query = db.query(TravelQuery).filter(TravelQuery.id == query_id).first()
+            if not query:
+                logger.warning(f"Query with ID {query_id} not found for deletion")
+                return False
+            
             db.delete(query)
             db.commit()
+            logger.info(f"Successfully deleted query with ID: {query_id}")
             return True
-        return False 
+        except Exception as e:
+            logger.error(f"Error deleting query: {str(e)}", exc_info=True)
+            raise 
