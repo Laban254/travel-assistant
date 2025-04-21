@@ -1,6 +1,10 @@
 # Travel Query Assistant
 
-A modern web application that helps users get detailed travel information including visa requirements, documents needed, and travel advisories using AI.
+A web application that helps users get detailed travel information including visa requirements, documents needed, and travel advisories using AI.
+
+## Live Demo
+- Frontend: [https://travel-assistant-alpha.vercel.app/](https://travel-assistant-alpha.vercel.app/)
+- Backend API: [https://travel-assistant-b08x.onrender.com](https://travel-assistant-b08x.onrender.com)
 
 ## Features
 
@@ -27,69 +31,15 @@ A modern web application that helps users get detailed travel information includ
 - Pre-commit hooks (Ruff, Black)
 - GitHub Actions CI
 
-## Getting Started
+## Documentation
 
-### Prerequisites
-- Node.js 18+
-- Python 3.12+
-- PostgreSQL
-- Google Gemini API key
+### Getting Started
+For detailed installation and setup instructions, please refer to:
+- [Frontend Setup](frontend/README.md)
+- [Backend Setup](backend/README.md)
 
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/travel-query-app.git
-cd travel-query-app
-```
-
-2. Set up the frontend:
-```bash
-cd frontend
-npm install
-```
-
-3. Set up the backend:
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: .\venv\Scripts\activate
-pip install -r requirements.txt
-pre-commit install
-```
-
-4. Configure environment variables:
-- Create `.env` files in both frontend and backend directories
-- See `.env.example` files for required variables
-
-5. Start the development servers:
-```bash
-# Terminal 1 - Backend
-cd backend
-uvicorn app.main:app --reload
-
-# Terminal 2 - Frontend
-cd frontend
-npm run dev
-```
-
-## Development
-
-### Code Quality
-- Pre-commit hooks are installed automatically
-- Run `pre-commit run --all-files` to check all files
-- CI checks run on every push and pull request
-
-### Project Structure
-```
-travel-query-app/
-├── frontend/          # Next.js frontend
-├── backend/           # FastAPI backend
-│   ├── app/          # Application code
-│   ├── alembic/      # Database migrations
-│   └── tests/        # Test files
-└── README.md         # This file
-```
+### LLM Prompts Documentation
+The application uses Google's Gemini AI model to generate travel information. Detailed documentation about the prompts used can be found in [docs/PROMPTS.md](docs/PROMPTS.md).
 
 ## Contributing
 
