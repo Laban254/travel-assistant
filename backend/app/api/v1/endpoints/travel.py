@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.logging_config import setup_logging
-from app.core.rate_limiter import RateLimiter, rate_limit
+from app.core.rate_limiter import RateLimiter
 from app.models.travel_query import TravelQuery
 from app.schemas.travel_query import TravelQueryCreate, TravelQueryResponse
 from app.services.gemini_service import GeminiService
@@ -17,16 +17,17 @@ router = APIRouter()
 gemini_service = GeminiService()
 history_service = HistoryService()
 
+# Initialize rate limiters
 query_rate_limiter = RateLimiter(
-    max_requests=10, time_window=60
-)  # 10 requests per minute
-history_rate_limiter = RateLimiter(
     max_requests=5, time_window=60
 )  # 5 requests per minute
+history_rate_limiter = RateLimiter(
+    max_requests=10, time_window=60
+)  # 10 requests per minute
 
 
 @router.post("/query", response_model=TravelQueryResponse)
-@rate_limit(times=5, minutes=1)
+@query_rate_limiter
 async def create_travel_query(
     request: Request, query: TravelQueryCreate, db: Session = Depends(get_db)
 ) -> TravelQueryResponse:
