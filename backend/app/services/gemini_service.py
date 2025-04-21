@@ -29,10 +29,10 @@ class GeminiService:
         Raises:
             ValueError: If the Gemini API key is not configured in environment variables
         """
-        self.api_key = os.getenv("GEMINI_API_KEY")
+        self.api_key = settings.GEMINI_API_KEY
         
-        if not self.api_key:
-            logger.error("Gemini API key is missing")
+        if not self.api_key or self.api_key == "your_gemini_api_key_here":
+            logger.error("Gemini API key is missing or not configured")
             raise ValueError("Gemini API key is not configured")
         
         genai.configure(api_key=self.api_key)
