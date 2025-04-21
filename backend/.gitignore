@@ -71,7 +71,6 @@ __pydantic_cache__/
 
 # dotenv
 .env
-.env.*
 
 # SQLite DBs or other local dev files
 *.db
