@@ -1,120 +1,104 @@
 # Travel Query Assistant
 
-An AI-powered travel information system that provides detailed travel requirements, visa information, and advisories using Google's Gemini AI.
+A modern web application that helps users get detailed travel information including visa requirements, documents needed, and travel advisories using AI.
 
-## Architecture
-
-```
-travel-query-app/
-├── frontend/          # Next.js application
-└── backend/          # FastAPI service
-```
-
-## Key Features
+## Features
 
 - AI-powered travel information generation
-- Natural language query processing
-- Database-agnostic design (MySQL/PostgreSQL)
-- Dark mode support
-- Responsive web interface
-- Comprehensive logging system
+- Query history tracking
+- User authentication
+- Rate limiting
+- Comprehensive logging
+- Code quality checks with pre-commit hooks
 
 ## Tech Stack
 
-### Backend
-- FastAPI
-- SQLAlchemy ORM
-- Google Gemini AI
-- MySQL/PostgreSQL
-- Pydantic
-
 ### Frontend
-- Next.js 15.2
+- Next.js
 - TypeScript
 - Tailwind CSS
 - Shadcn UI
-- Framer Motion
 
-## Quick Start
+### Backend
+- FastAPI
+- SQLAlchemy
+- PostgreSQL
+- Google Gemini AI
+- Pre-commit hooks (Ruff, Black)
+- GitHub Actions CI
 
-### Backend Setup
+## Getting Started
+
+### Prerequisites
+- Node.js 18+
+- Python 3.12+
+- PostgreSQL
+- Google Gemini API key
+
+### Installation
+
+1. Clone the repository:
 ```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-
-# Configure environment
-cp .env.example .env
-# Edit .env with your database and API keys
-
-# Start server
-uvicorn app.main:app --reload
+git clone https://github.com/yourusername/travel-query-app.git
+cd travel-query-app
 ```
 
-### Frontend Setup
+2. Set up the frontend:
 ```bash
 cd frontend
 npm install
+```
 
-# Configure environment
-cp .env.example .env
-# Edit .env with your API URL
+3. Set up the backend:
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: .\venv\Scripts\activate
+pip install -r requirements.txt
+pre-commit install
+```
 
-# Start development server
+4. Configure environment variables:
+- Create `.env` files in both frontend and backend directories
+- See `.env.example` files for required variables
+
+5. Start the development servers:
+```bash
+# Terminal 1 - Backend
+cd backend
+uvicorn app.main:app --reload
+
+# Terminal 2 - Frontend
+cd frontend
 npm run dev
 ```
 
-## API Documentation
-
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
-
 ## Development
 
-### Prerequisites
-- Python 3.8+
-- Node.js 16+
-- MySQL or PostgreSQL
-- Google Gemini API key
+### Code Quality
+- Pre-commit hooks are installed automatically
+- Run `pre-commit run --all-files` to check all files
+- CI checks run on every push and pull request
 
-### Environment Variables
-
-#### Backend
-```env
-DATABASE_URL=mysql://user:password@localhost:3306/travel_app
-GEMINI_API_KEY=your_gemini_api_key
+### Project Structure
 ```
-
-#### Frontend
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
+travel-query-app/
+├── frontend/          # Next.js frontend
+├── backend/           # FastAPI backend
+│   ├── app/          # Application code
+│   ├── alembic/      # Database migrations
+│   └── tests/        # Test files
+└── README.md         # This file
 ```
-
-## Project Structure
-
-### Backend Components
-- RESTful API endpoints
-- Database models and migrations
-- AI service integration
-- Query history management
-- Logging and error handling
-
-### Frontend Components
-- Travel query interface
-- Real-time API integration
-- Response visualization
-- Theme management
-- Error handling and notifications
 
 ## Contributing
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.

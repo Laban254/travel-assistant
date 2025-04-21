@@ -1,112 +1,137 @@
-# Travel Query App Backend
+# Travel Query Assistant Backend
 
-FastAPI backend for AI-powered travel information using Google's Gemini AI.
+FastAPI backend service for the Travel Query Assistant application.
 
 ## Features
 
-- AI-powered travel information generation
-- Query history tracking
-- Rate limiting middleware
+- RESTful API endpoints
+- Google Gemini AI integration
+- Database migrations with Alembic
+- Rate limiting
 - Comprehensive logging
-- Database-agnostic design (MySQL/PostgreSQL)
+- Pre-commit hooks for code quality
+- GitHub Actions CI
 
 ## Tech Stack
 
 - FastAPI
-- SQLAlchemy (ORM)
-- MySQL/PostgreSQL (configurable)
+- SQLAlchemy ORM
+- PostgreSQL
 - Google Gemini AI
 - Pydantic
+- Pre-commit (Ruff, Black)
+- GitHub Actions
 
-## Project Structure
+## Getting Started
+
+### Prerequisites
+
+- Python 3.12+
+- PostgreSQL
+- Google Gemini API key
+
+### Installation
+
+1. Create and activate virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: .\venv\Scripts\activate
+```
+
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+3. Install pre-commit hooks:
+```bash
+pre-commit install
+```
+
+4. Configure environment variables:
+```bash
+cp .env.example .env
+# Edit .env with your configuration
+```
+
+### Environment Variables
+
+```env
+DATABASE_URL=postgresql://user:password@localhost:5432/travel_app
+GEMINI_API_KEY=your_gemini_api_key
+SECRET_KEY=your_secret_key
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+```
+
+### Running the Application
+
+1. Start the development server:
+```bash
+uvicorn app.main:app --reload
+```
+
+2. Access the API documentation:
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+
+## Development
+
+### Code Quality
+
+- Pre-commit hooks are installed automatically
+- Run `pre-commit run --all-files` to check all files
+- CI checks run on every push and pull request
+
+### Project Structure
 
 ```
 backend/
 ├── app/
-│   ├── api/                    # API endpoints
-│   │   └── v1/
-│   │       └── endpoints/      # Version 1 API endpoints
-│   │           └── travel.py   # Travel-related endpoints
-│   ├── core/                   # Core application components
-│   │   ├── config.py          # Application configuration
-│   │   ├── database.py        # Database configuration
-│   │   ├── logging_config.py  # Logging setup
-│   │   ├── middleware.py      # Custom middleware
-│   │   └── rate_limiter.py    # Rate limiting implementation
-│   ├── models/                 # Database models
-│   │   ├── travel_query.py
-│   │   ├── query_history.py
-│   │   └── travel_response.py
-│   ├── schemas/               # Pydantic models
-│   │   └── travel_query.py
-│   ├── services/              # Business logic
-│   │   ├── gemini_service.py  # Gemini AI integration
-│   │   └── history_service.py # Query history management
-│   ├── utils/                 # Utility functions
-│   ├── main.py                # Application entry point
-│   └── __init__.py
-├── requirements.txt
-└── README.md
+│   ├── api/           # API endpoints
+│   ├── core/          # Core functionality
+│   ├── models/        # Database models
+│   ├── schemas/       # Pydantic schemas
+│   └── services/      # Business logic
+├── alembic/           # Database migrations
+├── tests/             # Test files
+└── requirements.txt   # Dependencies
 ```
 
-## Configuration
+### Database Migrations
 
+1. Create a new migration:
 ```bash
-# .env
-DATABASE_URL=mysql://user:password@localhost:3306/travel_app
-# or
-DATABASE_URL=postgresql://user:password@localhost:5432/travel_app
-
-GEMINI_API_KEY=your_gemini_api_key
+alembic revision --autogenerate -m "description"
 ```
 
-## Key Components
-
-### Database
-- SQLAlchemy ORM for database operations
-- Support for both MySQL and PostgreSQL
-- Migrations handled via Alembic
-
-### Rate Limiting
-- Custom rate limiting middleware
-- Configurable limits per endpoint
-- IP-based request tracking
-
-### Services
-- GeminiService: AI-powered responses
-- HistoryService: Query management
-- Logging: Comprehensive event tracking
-
-## Quick Start
-
+2. Apply migrations:
 ```bash
-# Setup
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# Run
-uvicorn app.main:app --reload
+alembic upgrade head
 ```
 
-API Docs: http://localhost:8000/docs
+### Testing
 
-## Development
+Run tests with:
+```bash
+pytest
+```
 
-### Code Style
-- Follow PEP 8 guidelines
-- Use type hints
-- Document all public functions and classes
+## API Endpoints
+
+- `POST /api/v1/query` - Create a new travel query
+- `GET /api/v1/history` - Get query history
+- `GET /api/v1/history/{id}` - Get specific query
+- `DELETE /api/v1/history/{id}` - Delete a query
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+1. Follow the conventional commit format
+2. Run pre-commit hooks before committing
+3. Ensure all tests pass
+4. Update documentation as needed
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
