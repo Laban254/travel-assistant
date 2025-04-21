@@ -1,28 +1,53 @@
 # Travel Query Frontend
 
-A React-based frontend for the Travel Query application, providing a modern and responsive interface for querying travel information.
+A Next.js-based frontend for the Travel Query application, providing a modern and responsive interface for querying travel information.
 
 ## Project Structure
 
 ```
 frontend/
-├── src/
-│   ├── components/
-│   │   ├── QueryForm.tsx
-│   │   ├── ResponseCard.tsx
-│   │   ├── QueryHistory.tsx
-│   │   └── ui/
-│   ├── pages/
-│   │   └── index.tsx
-│   ├── services/
-│   │   └── api.ts
-│   ├── types/
-│   │   └── index.ts
-│   └── styles/
-├── public/
-├── package.json
-└── README.md
+├── app/                    # Next.js 13+ app directory
+│   ├── globals.css        # Global styles
+│   ├── layout.tsx         # Root layout
+│   └── page.tsx           # Home page
+├── components/            # React components
+│   ├── ui/               # Shadcn UI components
+│   ├── theme-provider.tsx
+│   ├── travel-query-app.tsx
+│   └── response-card.tsx
+├── lib/                   # Utility functions
+│   ├── api.ts            # API client
+│   └── utils.ts          # Helper functions
+├── hooks/                # Custom React hooks
+├── public/               # Static files
+└── package.json
 ```
+
+## Environment Variables
+
+```bash
+# .env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+## Tech Stack
+
+- Next.js 15.2
+- React 18
+- TypeScript
+- Tailwind CSS
+- Shadcn UI
+- Framer Motion
+- Lucide Icons
+
+## Features
+
+- Travel query form with destination/origin extraction
+- Real-time API integration
+- Dark mode support
+- Responsive design
+- Loading states and error handling
+- Toast notifications
 
 ## Setup
 
@@ -31,9 +56,9 @@ frontend/
 npm install
 ```
 
-2. Create a `.env` file:
-```env
-VITE_API_URL=http://localhost:8000
+2. Set up environment variables:
+```bash
+cp .env.example .env
 ```
 
 3. Start the development server:
@@ -41,90 +66,34 @@ VITE_API_URL=http://localhost:8000
 npm run dev
 ```
 
-## Features
+## Available Scripts
 
-- Modern, responsive UI with Tailwind CSS
-- Real-time travel information queries
-- Query history tracking and management
-- Interactive response display
-- Error handling and user feedback
-- Dark mode support
-- Mobile-friendly design
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
 
 ## Components
 
-### QueryForm
-- Input fields for travel query
-- Destination and origin selection
-- Submit button with loading state
+### Main Components
+- `TravelQueryApp`: Main application component
+- `ResponseCard`: Displays travel information
+- `ThemeProvider`: Manages dark/light mode
 
-### ResponseCard
-- Display of travel information
-- Organized sections for different types of information
-- Icons and visual indicators
-- Responsive layout
-
-### QueryHistory
-- List of previous queries
-- Quick access to past responses
-- Delete functionality
-- Modal view for detailed information
-
-## API Integration
-
-The frontend communicates with the backend API using the following endpoints:
-
-```typescript
-interface TravelResponse {
-    destination: string;
-    origin: string;
-    visaRequirements: string;
-    documents: string[];
-    advisories: string[];
-    estimatedProcessingTime: string;
-    embassyInformation: string;
-    timestamp: string;
-}
-
-interface TravelQuery {
-    id: number;
-    query: string;
-    destination: string;
-    origin: string;
-    response: TravelResponse;
-    created_at: string;
-}
-```
+### UI Components (shadcn/ui)
+- Button
+- Card
+- Dialog
+- Input
+- Alert
+- Toast
+- Label
 
 ## Development
 
-### Available Scripts
-
-- `npm run dev`: Start development server
-- `npm run build`: Build for production
-- `npm run test`: Run tests
-- `npm run lint`: Run linter
-
-### Styling
-
-- Tailwind CSS for utility-first styling
-- Custom components with shadcn/ui
-- Responsive design breakpoints
-- Dark mode support
-
-### State Management
-
-- React Query for data fetching
-- Local state for UI components
-- Context for theme management
-
-## Dependencies
-
-- React
-- TypeScript
-- Tailwind CSS
-- shadcn/ui
-- React Query
-- Axios
-- date-fns
-- Lucide Icons
+The application uses:
+- TypeScript for type safety
+- Tailwind CSS for styling
+- Next.js App Router
+- Environment variables for configuration
+- Framer Motion for animations
