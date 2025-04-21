@@ -6,6 +6,8 @@ include = '\.pyi?$'
 [tool.ruff]
 line-length = 88
 target-version = "py312"
+
+[tool.ruff.lint]
 select = [
     "E",  # pycodestyle errors
     "F",  # pyflakes
@@ -14,7 +16,10 @@ select = [
     "C4", # flake8-comprehensions
     "UP", # pyupgrade
 ]
-ignore = []
+ignore = [
+    "B008",  # FastAPI Depends pattern
+    "E501",  # Line length (handled by black)
+]
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["app"] 

@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+
 from .config import get_settings
 from .logging_config import setup_logging
 
@@ -13,6 +14,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
+
 def get_db():
     """Get database session with proper cleanup."""
     db = SessionLocal()
@@ -24,4 +26,4 @@ def get_db():
         raise
     finally:
         logger.debug("Closing database session")
-        db.close() 
+        db.close()

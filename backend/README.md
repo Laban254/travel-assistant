@@ -83,6 +83,33 @@ uvicorn app.main:app --reload
 - Run `pre-commit run --all-files` to check all files
 - CI checks run on every push and pull request
 
+### Running Pre-commit
+
+Pre-commit can be run in several ways:
+
+1. **Automatic Run (on commit)**:
+   ```bash
+   git add .
+   git commit -m "your message"
+   # pre-commit will run automatically
+   ```
+
+2. **Manual Run (on all files)**:
+   ```bash
+   pre-commit run --all-files
+   ```
+
+3. **Manual Run (on specific files)**:
+   ```bash
+   pre-commit run --files path/to/file1.py path/to/file2.py
+   ```
+
+If pre-commit finds issues:
+- It will automatically fix some issues (like formatting with Black)
+- For other issues, it will show you what needs to be fixed
+- You'll need to fix those issues manually
+- Then run `git add` again and try committing
+
 ### Project Structure
 
 ```
